@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Khmer Book Cover Studio - Drag & Adjust (ទាញសារេតាមចិត្ត)</title>
+  
+  <!-- Khmer Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Content:wght@400;700&family=Kantumruy+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,700&family=Koulen&family=Moul&family=Preahvihear&family=Siemreap&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- jsPDF Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Pre-loaded High Resolution Background Presets -->
+  <script src="background-presets.js"></script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(24, 24, 27, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(113, 113, 122, 0.5);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(161, 161, 170, 0.8);
+    }
+
+    /* Drag Box Overlay Styling */
+    .drag-box {
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    
+    .drag-box:hover .selection-outline {
+      border-color: rgba(56, 189, 248, 0.65);
+      background-color: rgba(56, 189, 248, 0.05);
+    }
+
+    .drag-box.is-selected .selection-outline {
+      border-color: #38bdf8 !important;
+      background-color: rgba(56, 189, 248, 0.08) !important;
+      box-shadow: 0 0 0 1px #38bdf8, 0 4px 14px rgba(56, 189, 248, 0.35);
+    }
+
+    .drag-box.is-selected .drag-handle-corner {
+      display: block !important;
+    }
+
+    .drag-box.is-selected .drag-badge {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+    }
+
+    /* Hide Guides Mode */
+    .hide-guides .selection-outline {
+      border-color: transparent !important;
+      background-color: transparent !important;
+      box-shadow: none !important;
+    }
+    .hide-guides .drag-handle-corner,
+    .hide-guides .drag-badge {
+      display: none !important;
+    }
+  </style>
+</head>
+<body class="bg-stone-950 text-stone-100 min-h-screen font-sans antialiased flex flex-col items-center selection:bg-sky-500 selection:text-white">
+
+  <!-- Top Navigation Bar -->
+  <header class="w-full bg-stone-900/95 backdrop-blur border-b border-stone-800 sticky top-0 z-50 px-4 py-2.5 shadow-xl">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand Logo & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-500 border border-sky-400/40 flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-bold text-sky-300">រចនាគម្របសៀវភៅ (Book Cover Studio)</h1>
+            <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30">
+              ទាញសារេបានសេរី 300 DPI
+            </span>
+          </div>
+          <p class="text-xs text-stone-400">ចុចទាញពាក្យលើក្របផ្ទាល់ ឬសារេទីតាំង សាលា ថ្នាក់ មុខវិជ្ជា ឈ្មោះ ឆ្នាំសិក្សា</p>
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="flex items-center gap-2 flex-wrap">
+        
+        <!-- Toggle Guide Outlines -->
+        <button id="btnToggleGuides" onclick="toggleGuides()" title="បើក/បិទ បន្ទាត់ជំនួយទាញ" 
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 border border-stone-700 rounded-xl text-xs font-medium transition active:scale-95">
+          <svg id="eyeIcon" class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+          </svg>
+          <span id="guidesBtnText">បន្ទាត់ទាញ: បើក</span>
+        </button>
+
+        <!-- Reset Positions -->
+        <button onclick="resetDefaultPositions()" title="កំណត់ទីតាំងដើមឡើងវិញ"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-medium transition active:scale-95">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          <span>ទីតាំងដើម</span>
+        </button>
+
+        <!-- Download PNG -->
+        <button onclick="downloadCoverImage()" title="ទាញយកជារូបភាពច្បាស់ HD"
+          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-stone-800 hover:bg-stone-700 text-emerald-400 border border-emerald-500/40 rounded-xl text-xs font-semibold transition active:scale-95 shadow">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <span>រូបភាព PNG</span>
+        </button>
+
+        <!-- Download PDF -->
+        <button id="btnSavePdf" onclick="downloadCoverPDF()" class="inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-sky-500 via-indigo-500 to-sky-600 hover:from-sky-400 hover:to-indigo-400 text-white rounded-xl font-bold text-xs sm:text-sm shadow-lg shadow-sky-500/25 transition active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+          </svg>
+          <span id="pdfBtnText">ទាញយកជា PDF (300 DPI)</span>
+        </button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Workspace Container -->
+  <div class="w-full max-w-[1550px] mx-auto flex-1 flex flex-col lg:flex-row gap-6 p-3 sm:p-5 items-start justify-center">
+    
+    <!-- LEFT PANEL: Dynamic Multi-tab Controls -->
+    <aside class="w-full lg:w-[440px] flex flex-col gap-3 bg-stone-900/90 backdrop-blur border border-stone-800 rounded-2xl p-4 sm:p-5 shadow-2xl">
+      
+      <!-- Main Tabs (Text Drag Controls | Backgrounds | Settings) -->
+      <div class="grid grid-cols-3 gap-1.5 bg-stone-950 p-1 rounded-xl border border-stone-800 text-xs font-semibold">
+        <button id="tabBtnTexts" onclick="switchSidebarTab('texts')" 
+          class="py-2 px-2 rounded-lg transition text-sky-400 bg-stone-800/90 shadow text-center flex items-center justify-center gap-1.5">
+          <span>🎯 ទាញសារេ</span>
+        </button>
+        <button id="tabBtnBackgrounds" onclick="switchSidebarTab('backgrounds')" 
+          class="py-2 px-2 rounded-lg transition text-stone-400 hover:text-stone-200 text-center flex items-center justify-center gap-1.5">
+          <span>🌸 ផ្ទៃខាងក្រោយ</span>
+        </button>
+        <button id="tabBtnExport" onclick="switchSidebarTab('export')" 
+          class="py-2 px-2 rounded-lg transition text-stone-400 hover:text-stone-200 text-center flex items-center justify-center gap-1.5">
+          <span>⚙️ ក្រដាស & ពុម្ព</span>
+        </button>
+      </div>
+
+      <!-- TAB 1: TEXTS & DRAG CONTROLS -->
+      <div id="tabContentTexts" class="space-y-4">
+        
+        <!-- Element Quick Switcher Chips -->
+        <div>
+          <label class="block text-xs font-bold text-stone-300 mb-1.5 flex items-center justify-between">
+            <span>ជ្រើសរើសពាក្យដើម្បីសារេ (Select Item):</span>
+            <span class="text-[11px] text-sky-400 font-normal">ចុចលើរូបដើម្បីទាញផ្ទាល់បាន</span>
+          </label>
+          <div class="grid grid-cols-5 gap-1 bg-stone-950 p-1.5 rounded-xl border border-stone-800 text-[11px]">
+            <button type="button" onclick="selectElement('school')" id="chip-school" 
+              class="item-chip py-2 px-1 rounded-lg text-center transition font-semibold flex flex-col items-center gap-0.5 bg-sky-500/20 text-sky-300 border border-sky-500/40">
+              <span class="text-sm">🏫</span>
+              <span class="truncate w-full">សាលា</span>
+            </button>
+            <button type="button" onclick="selectElement('grade')" id="chip-grade" 
+              class="item-chip py-2 px-1 rounded-lg text-center transition font-semibold flex flex-col items-center gap-0.5 text-stone-400 hover:text-stone-200">
+              <span class="text-sm">🎓</span>
+              <span class="truncate w-full">ថ្នាក់</span>
+            </button>
+            <button type="button" onclick="selectElement('subject')" id="chip-subject" 
+              class="item-chip py-2 px-1 rounded-lg text-center transition font-semibold flex flex-col items-center gap-0.5 text-stone-400 hover:text-stone-200">
+              <span class="text-sm">📚</span>
+              <span class="truncate w-full">មុខវិជ្ជា</span>
+            </button>
+            <button type="button" onclick="selectElement('student')" id="chip-student" 
+              class="item-chip py-2 px-1 rounded-lg text-center transition font-semibold flex flex-col items-center gap-0.5 text-stone-400 hover:text-stone-200">
+              <span class="text-sm">👤</span>
+              <span class="truncate w-full">ឈ្មោះ</span>
+            </button>
+            <button type="button" onclick="selectElement('year')" id="chip-year" 
+              class="item-chip py-2 px-1 rounded-lg text-center transition font-semibold flex flex-col items-center gap-0.5 text-stone-400 hover:text-stone-200">
+              <span class="text-sm">📅</span>
+              <span class="truncate w-full">ឆ្នាំសិក្សា</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ACTIVE ITEM CARD: Fine-tuning controls -->
+        <div class="bg-stone-950/80 rounded-xl p-3.5 border border-sky-500/30 space-y-3 shadow-inner">
+          <div class="flex items-center justify-between border-b border-stone-800 pb-2">
+            <div class="flex items-center gap-2">
+              <span id="activeItemIcon" class="text-lg">🏫</span>
+              <span id="activeItemLabel" class="text-xs font-bold text-sky-300">ឈ្មោះសាលា / ស្ថាប័ន</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="centerActiveElementHorizontally()" 
+                class="px-2 py-0.5 text-[11px] font-semibold bg-stone-800 hover:bg-stone-700 text-sky-300 border border-sky-500/40 rounded-md transition active:scale-95" 
+                title="តម្រឹមចំកណ្តាលទំព័រ">
+                🎯 ដាក់ចំកណ្តាល
+              </button>
+              <button onclick="toggleActiveElementVisibility()" id="btnActiveVisibility"
+                class="px-2 py-0.5 text-[11px] font-semibold bg-stone-800 hover:bg-stone-700 text-stone-300 border border-stone-700 rounded-md transition" 
+                title="លាក់ ឬបង្ហាញ">
+                👁️ បង្ហាញ
+              </button>
+            </div>
+          </div>
+
+          <!-- Text Input -->
+          <div>
+            <label class="block text-[11px] text-stone-400 mb-1">ខ្លឹមសារអត្ថបទ (Text Content):</label>
+            <input type="text" id="activeTextValue" oninput="updateActiveElementProperty('text', this.value)"
+              class="w-full px-3 py-2 bg-stone-900 border border-stone-700 rounded-lg text-xs text-stone-100 font-medium focus:outline-none focus:border-sky-400 shadow-inner">
+          </div>
+
+          <!-- Position Adjuster: Directional Nudge Pad & Percentage Sliders -->
+          <div class="space-y-2 bg-stone-900/60 p-2.5 rounded-lg border border-stone-800">
+            <div class="flex items-center justify-between text-[11px] text-stone-400">
+              <span class="font-semibold text-stone-300">សារេទីតាំង (Position Controls):</span>
+              <span id="activePositionLabel" class="font-mono text-sky-400 text-xs">X: 50% | Y: 32%</span>
+            </div>
+
+            <!-- Directional Nudge Buttons -->
+            <div class="grid grid-cols-4 gap-1.5 pt-1">
+              <button type="button" onclick="nudgeActiveElement(0, -1)" class="py-1 px-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg text-xs font-semibold text-stone-200 transition active:scale-95 flex items-center justify-center gap-1">
+                <span>⬆️</span> <span>ឡើង</span>
+              </button>
+              <button type="button" onclick="nudgeActiveElement(0, 1)" class="py-1 px-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg text-xs font-semibold text-stone-200 transition active:scale-95 flex items-center justify-center gap-1">
+                <span>⬇️</span> <span>ចុះ</span>
+              </button>
+              <button type="button" onclick="nudgeActiveElement(-1, 0)" class="py-1 px-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg text-xs font-semibold text-stone-200 transition active:scale-95 flex items-center justify-center gap-1">
+                <span>⬅️</span> <span>ឆ្វេង</span>
+              </button>
+              <button type="button" onclick="nudgeActiveElement(1, 0)" class="py-1 px-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg text-xs font-semibold text-stone-200 transition active:scale-95 flex items-center justify-center gap-1">
+                <span>➡️</span> <span>ស្តាំ</span>
+              </button>
+            </div>
+
+            <!-- Precision Sliders -->
+            <div class="grid grid-cols-2 gap-2 pt-1 text-[11px] text-stone-400">
+              <div>
+                <div class="flex justify-between mb-0.5">
+                  <span>ផ្តេក (X):</span>
+                  <span id="labelX" class="font-mono text-sky-400">50%</span>
+                </div>
+                <input type="range" id="sliderX" min="5" max="95" step="0.5" value="50" 
+                  oninput="updateActiveElementProperty('xPercent', parseFloat(this.value))" class="w-full accent-sky-400">
+              </div>
+              <div>
+                <div class="flex justify-between mb-0.5">
+                  <span>បញ្ឈរ (Y):</span>
+                  <span id="labelY" class="font-mono text-sky-400">32%</span>
+                </div>
+                <input type="range" id="sliderY" min="5" max="95" step="0.5" value="32" 
+                  oninput="updateActiveElementProperty('yPercent', parseFloat(this.value))" class="w-full accent-sky-400">
+              </div>
+            </div>
+          </div>
+
+          <!-- Typography: Font Size & Font Family -->
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <label class="block text-[11px] text-stone-400 mb-1">ពុម្ពអក្សរ (Font Family):</label>
+              <select id="activeFontFamily" onchange="updateActiveElementProperty('font', this.value)"
+                class="w-full px-2 py-1.5 bg-stone-900 border border-stone-700 rounded-lg text-sky-200 focus:outline-none focus:border-sky-400 text-xs">
+                <option value="'Kantumruy Pro', sans-serif">ខណ្ឌរុយ (Kantumruy)</option>
+                <option value="'Moul', serif">អក្សរមូល (Moul)</option>
+                <option value="'Siemreap', sans-serif">សៀមរាប (Siemreap)</option>
+                <option value="'Battambang', sans-serif">បាត់ដំបង (Battambang)</option>
+                <option value="'Preahvihear', sans-serif">ព្រះវិហារ (Preahvihear)</option>
+                <option value="'Content', sans-serif">ខនថិន (Content)</option>
+                <option value="'Koulen', cursive">គូលែន (Koulen)</option>
+              </select>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] text-stone-400 mb-1">
+                <span>ទំហំអក្សរ (Size):</span>
+                <span id="activeSizeLabel" class="font-mono text-sky-400 font-bold">42px</span>
+              </div>
+              <input type="range" id="activeFontSize" min="18" max="90" step="1" value="42"
+                oninput="updateActiveElementProperty('size', parseInt(this.value, 10))" class="w-full accent-sky-400 mt-2">
+            </div>
+          </div>
+
+          <!-- Styling: Color, Bold, Align -->
+          <div class="space-y-2 pt-1">
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] text-stone-400">ពណ៌អក្សរ (Color):</label>
+              <div class="flex items-center gap-1.5">
+                <button type="button" onclick="setElementColor('#1e3a8a')" class="w-5 h-5 rounded-full bg-[#1e3a8a] border border-white/30 shadow" title="Royal Navy"></button>
+                <button type="button" onclick="setElementColor('#0f172a')" class="w-5 h-5 rounded-full bg-[#0f172a] border border-white/30 shadow" title="Slate Black"></button>
+                <button type="button" onclick="setElementColor('#92400e')" class="w-5 h-5 rounded-full bg-[#92400e] border border-white/30 shadow" title="Khmer Gold/Bronze"></button>
+                <button type="button" onclick="setElementColor('#831843')" class="w-5 h-5 rounded-full bg-[#831843] border border-white/30 shadow" title="Crimson"></button>
+                <button type="button" onclick="setElementColor('#ffffff')" class="w-5 h-5 rounded-full bg-[#ffffff] border border-stone-600 shadow" title="White"></button>
+                <input type="color" id="activeColorPicker" onchange="updateActiveElementProperty('color', this.value)" class="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0">
+              </div>
+            </div>
+
+            <!-- Alignment and Style Toggles -->
+            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+              <div class="flex items-center bg-stone-900 p-0.5 rounded-lg border border-stone-700">
+                <button type="button" onclick="updateActiveElementProperty('align', 'left')" id="btnAlignLeft" class="flex-1 py-1 rounded text-center text-stone-400 hover:text-white">ឆ្វេង</button>
+                <button type="button" onclick="updateActiveElementProperty('align', 'center')" id="btnAlignCenter" class="flex-1 py-1 rounded text-center bg-sky-500/20 text-sky-300 font-bold">កណ្តាល</button>
+                <button type="button" onclick="updateActiveElementProperty('align', 'right')" id="btnAlignRight" class="flex-1 py-1 rounded text-center text-stone-400 hover:text-white">ស្តាំ</button>
+              </div>
+
+              <div class="flex items-center gap-1">
+                <button type="button" onclick="toggleActiveElementWeight()" id="btnWeight" class="flex-1 py-1 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/30 font-bold text-center">B ក្រាស់</button>
+                <button type="button" onclick="toggleActiveElementShadow()" id="btnShadow" class="flex-1 py-1 rounded-lg bg-stone-800 text-stone-300 border border-stone-700 text-center">ស្រមោល</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Quick All-Text Inputs Section (For fast bulk editing) -->
+        <details class="bg-stone-950/60 rounded-xl border border-stone-800 p-3 group">
+          <summary class="text-xs font-bold text-stone-300 cursor-pointer flex items-center justify-between select-none">
+            <span class="flex items-center gap-1.5">
+              <span>📝</span> <span>កែប្រែខ្លឹមសារទាំងអស់ (Quick Edit All)</span>
+            </span>
+            <span class="text-stone-500 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="space-y-2 mt-3 text-xs pt-2 border-t border-stone-800">
+            <div>
+              <span class="text-[11px] text-stone-400">🏫 ឈ្មោះសាលា / ស្ថាប័ន</span>
+              <input type="text" id="quickSchool" oninput="syncTextFromQuick('school', this.value)" class="w-full mt-0.5 px-2.5 py-1.5 bg-stone-900 border border-stone-800 rounded-lg text-stone-100">
+            </div>
+            <div>
+              <span class="text-[11px] text-stone-400">🎓 ថ្នាក់រៀន</span>
+              <input type="text" id="quickGrade" oninput="syncTextFromQuick('grade', this.value)" class="w-full mt-0.5 px-2.5 py-1.5 bg-stone-900 border border-stone-800 rounded-lg text-stone-100">
+            </div>
+            <div>
+              <span class="text-[11px] text-stone-400">📚 មុខវិជ្ជា</span>
+              <input type="text" id="quickSubject" oninput="syncTextFromQuick('subject', this.value)" class="w-full mt-0.5 px-2.5 py-1.5 bg-stone-900 border border-stone-800 rounded-lg text-stone-100">
+            </div>
+            <div>
+              <span class="text-[11px] text-stone-400">👤 ឈ្មោះសិស្ស</span>
+              <input type="text" id="quickStudent" oninput="syncTextFromQuick('student', this.value)" class="w-full mt-0.5 px-2.5 py-1.5 bg-stone-900 border border-stone-800 rounded-lg text-stone-100">
+            </div>
+            <div>
+              <span class="text-[11px] text-stone-400">📅 ឆ្នាំសិក្សា</span>
+              <input type="text" id="quickYear" oninput="syncTextFromQuick('year', this.value)" class="w-full mt-0.5 px-2.5 py-1.5 bg-stone-900 border border-stone-800 rounded-lg text-stone-100">
+            </div>
+          </div>
+        </details>
+
+      </div>
+
+      <!-- TAB 2: BACKGROUND STYLES -->
+      <div id="tabContentBackgrounds" class="space-y-4 hidden">
+        <div class="border-b border-stone-800 pb-2 flex items-center justify-between">
+          <label class="text-xs font-bold text-stone-300">ជ្រើសរើសម៉ូដផ្ទៃខាងក្រោយ (Cover Style):</label>
+          <span class="text-[11px] text-sky-400">ច្បាស់ 100% មិនបែក</span>
+        </div>
+
+        <!-- Presets Grid -->
+        <div class="grid grid-cols-2 gap-2.5">
+          
+          <!-- Preset 1: Floral Blue Gingham A4 (Default & Recommended) -->
+          <button type="button" onclick="setBackgroundMode('floral_a4')" id="bgBtn-floral_a4"
+            class="bg-btn relative p-2.5 rounded-xl border-2 border-sky-400 bg-stone-950 text-left transition hover:border-sky-300 group overflow-hidden shadow-lg shadow-sky-500/10">
+            <div class="h-24 w-full rounded-lg bg-cover bg-center border border-stone-700/60 mb-2 relative overflow-hidden" 
+                 style="background-image: url('floral_cover_a4.jpg');">
+              <span class="absolute top-1 right-1 px-1.5 py-0.5 bg-sky-500 text-stone-950 font-extrabold text-[9px] rounded-md shadow">A4 HD</span>
+            </div>
+            <div class="font-bold text-xs text-sky-300 group-hover:text-sky-200">🌸 ផ្កាខៀវ A4 HD</div>
+            <div class="text-[10px] text-stone-400">សមស្រប A4 ស្អាតឥតខ្ចោះ</div>
+          </button>
+
+          <!-- Preset 2: Original Uploaded Template -->
+          <button type="button" onclick="setBackgroundMode('floral_original')" id="bgBtn-floral_original"
+            class="bg-btn relative p-2.5 rounded-xl border border-stone-700 bg-stone-950 text-left transition hover:border-sky-400 group overflow-hidden">
+            <div class="h-24 w-full rounded-lg bg-cover bg-center border border-stone-700/60 mb-2 relative overflow-hidden" 
+                 style="background-image: url('flower_cover_bg.png');">
+              <span class="absolute top-1 right-1 px-1.5 py-0.5 bg-indigo-500 text-white font-extrabold text-[9px] rounded-md shadow">គំរូដើម</span>
+            </div>
+            <div class="font-bold text-xs text-stone-200 group-hover:text-sky-300">📷 ផ្កាខៀវគំរូដើម</div>
+            <div class="text-[10px] text-stone-400">រូបដើមដែលអ្នកបានផ្ញើ</div>
+          </button>
+
+          <!-- Preset 3: Floral Slim (9:16) -->
+          <button type="button" onclick="setBackgroundMode('floral_hd')" id="bgBtn-floral_hd"
+            class="bg-btn relative p-2.5 rounded-xl border border-stone-700 bg-stone-950 text-left transition hover:border-sky-400 group overflow-hidden">
+            <div class="h-24 w-full rounded-lg bg-cover bg-center border border-stone-700/60 mb-2" 
+                 style="background-image: url('floral_cover_hd.jpg');"></div>
+            <div class="font-bold text-xs text-stone-200 group-hover:text-sky-300">📱 ផ្កាខៀវ HD ស្តើង</div>
+            <div class="text-[10px] text-stone-400">ម៉ូដស្តើង 9:16 ច្បាស់</div>
+          </button>
+
+          <!-- Preset 4: Royal Gold White -->
+          <button type="button" onclick="setBackgroundMode('white-royal')" id="bgBtn-white-royal"
+            class="bg-btn relative p-2.5 rounded-xl border border-stone-700 bg-stone-950 text-left transition hover:border-amber-400 group overflow-hidden">
+            <div class="h-24 w-full rounded-lg bg-[#faf7f2] border border-amber-300/50 mb-2 flex items-center justify-center">
+              <span class="text-2xl">👑</span>
+            </div>
+            <div class="font-bold text-xs text-amber-300 group-hover:text-amber-200">✨ ក្បាច់មាសពណ៌ស</div>
+            <div class="text-[10px] text-stone-400">ក្បាច់រចនាខ្មែរប្រណិត</div>
+          </button>
+
+          <!-- Preset 5: Royal Dark Crimson -->
+          <button type="button" onclick="setBackgroundMode('dark-royal')" id="bgBtn-dark-royal"
+            class="bg-btn relative p-2.5 rounded-xl border border-stone-700 bg-stone-950 text-left transition hover:border-amber-400 group overflow-hidden">
+            <div class="h-24 w-full rounded-lg bg-[#250407] border border-amber-600/40 mb-2 flex items-center justify-center">
+              <span class="text-2xl">🍷</span>
+            </div>
+            <div class="font-bold text-xs text-amber-400 group-hover:text-amber-300">🍷 ក្រហមឈាមជ្រូក</div>
+            <div class="text-[10px] text-stone-400">បែបអភិជនមាសចាស់</div>
+          </button>
+
+          <!-- Preset 6: Clean White Paper -->
+          <button type="button" onclick="setBackgroundMode('clean-white')" id="bgBtn-clean-white"
+            class="bg-btn relative p-2.5 rounded-xl border border-stone-700 bg-stone-950 text-left transition hover:border-sky-400 group overflow-hidden">
+            <div class="h-24 w-full rounded-lg bg-white border border-stone-400 mb-2 flex items-center justify-center">
+              <span class="text-2xl">📄</span>
+            </div>
+            <div class="font-bold text-xs text-stone-200 group-hover:text-sky-300">⚪ ពណ៌សធម្មតា</div>
+            <div class="text-[10px] text-stone-400">ផ្ទៃទទេសម្រាប់បោះពុម្ព</div>
+          </button>
+
+        </div>
+
+        <!-- Custom Upload Section -->
+        <div class="pt-2 border-t border-stone-800">
+          <label for="bgImageUpload" class="w-full cursor-pointer flex items-center justify-center gap-2 p-3 bg-stone-950 hover:bg-stone-800 border-2 border-dashed border-stone-700 hover:border-sky-400 text-sky-300 rounded-xl text-xs font-semibold transition active:scale-98 shadow">
+            <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <span>Upload រូប BG ផ្ទាល់ខ្លួនរបស់អ្នក (Original HD)</span>
+            <input type="file" id="bgImageUpload" accept="image/*" class="hidden">
+          </label>
+        </div>
+
+      </div>
+
+      <!-- TAB 3: PAPER & EXPORT SETTINGS -->
+      <div id="tabContentExport" class="space-y-4 hidden">
+        <div class="border-b border-stone-800 pb-2">
+          <h3 class="text-xs font-bold text-stone-300">⚙️ ការកំណត់ទំហំក្រដាស & បោះពុម្ព</h3>
+        </div>
+
+        <!-- Paper Size -->
+        <div>
+          <label class="block text-xs font-semibold text-stone-300 mb-1">ទំហំក្រដាស (Paper Format):</label>
+          <select id="paperSize" onchange="renderCanvas()" class="w-full px-3 py-2 bg-stone-950 border border-stone-700 rounded-xl text-xs font-bold text-sky-300 focus:outline-none focus:border-sky-400">
+            <option value="a4" selected>A4 (210 × 297 mm) — ស្តង់ដារ</option>
+            <option value="a3">A3 (297 × 420 mm) — ធំ</option>
+            <option value="a5">A5 (148 × 210 mm) — តូច</option>
+            <option value="b5">B5 (176 × 250 mm) — សៀវភៅសរសេរ</option>
+            <option value="letter">Letter (8.5 × 11 in)</option>
+          </select>
+        </div>
+
+        <!-- Quantity of Pages in PDF -->
+        <div>
+          <label class="block text-xs font-semibold text-stone-300 mb-1">ចំនួនសន្លឹកក្នុង PDF (Print Copies):</label>
+          <div class="flex items-center">
+            <button onclick="adjustQty(-1)" class="w-10 h-9 flex items-center justify-center bg-stone-800 border border-stone-700 rounded-l-xl hover:bg-stone-700 font-bold active:scale-95 text-stone-200">-</button>
+            <input type="number" id="pdfQuantity" value="1" min="1" max="100" class="w-full h-9 text-center bg-stone-950 border-y border-stone-700 text-xs font-bold text-sky-300 focus:outline-none">
+            <button onclick="adjustQty(1)" class="w-10 h-9 flex items-center justify-center bg-stone-800 border border-stone-700 rounded-r-xl hover:bg-stone-700 font-bold active:scale-95 text-stone-200">+</button>
+          </div>
+          <p class="text-[11px] text-stone-500 mt-1">ឧទាហរណ៍៖ ដាក់ 10 ដើម្បីចេញ PDF ១០ សន្លឹកស្មើគ្នា ងាយស្រួលព្រីន</p>
+        </div>
+
+        <!-- Global Scale -->
+        <div class="space-y-2 pt-2 border-t border-stone-800">
+          <div class="flex justify-between items-center text-xs text-stone-300">
+            <span>ទំហំរួមទាំងអស់ (Overall Scale):</span>
+            <span id="globalScaleDisplay" class="text-sky-400 font-mono font-bold">100%</span>
+          </div>
+          <input type="range" id="globalScale" min="70" max="140" step="5" value="100"
+            oninput="document.getElementById('globalScaleDisplay').textContent = this.value + '%'; renderCanvas();" 
+            class="w-full accent-sky-400">
+        </div>
+
+        <!-- Quick Layout Presets -->
+        <div class="space-y-2 pt-2 border-t border-stone-800">
+          <label class="block text-xs font-semibold text-stone-300">ម៉ូដទីតាំងរៀបរយជាមុន (Layout Presets):</label>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <button type="button" onclick="applyPresetLayout('floral-centered')" class="p-2 rounded-lg bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 text-left font-medium">
+              🌸 ម៉ូដផ្កាខៀវ (សមស្រប)
+            </button>
+            <button type="button" onclick="applyPresetLayout('spacious')" class="p-2 rounded-lg bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 text-left font-medium">
+              📐 រៀបគម្លាតទូលាយ
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </aside>
+
+    <!-- RIGHT MAIN: Book Cover Interactive Preview Canvas -->
+    <main class="flex-1 w-full flex flex-col items-center justify-center">
+      
+      <!-- Instructions Banner -->
+      <div class="w-full max-w-[620px] mb-2 px-3 py-1.5 rounded-xl bg-sky-950/40 border border-sky-500/20 text-[11px] text-sky-200 flex items-center justify-between gap-2 shadow">
+        <span class="flex items-center gap-1.5">
+          <span class="animate-pulse">💡</span>
+          <span><b>គន្លឹះ៖</b> ចុចទាញពាក្យដោយផ្ទាល់នៅលើគម្របសៀវភៅ ឬចុចលើពាក្យដើម្បីប្តូរពណ៌ និងទំហំ</span>
+        </span>
+        <span class="text-stone-400 text-[10px] hidden sm:inline">Support Touch & Mouse</span>
+      </div>
+
+      <!-- Canvas & Interactive Drag Layer Wrapper -->
+      <div id="canvasWrapper" class="relative rounded-2xl overflow-hidden shadow-[0_30px_70px_-15px_rgba(0,0,0,0.95)] border border-sky-500/30 transition-all duration-300 select-none bg-stone-900">
+        
+        <!-- Underlying High-Res Render Canvas (Always Pure, No UI Marks) -->
+        <canvas id="coverCanvas" class="block w-full h-auto cursor-default" style="max-height: 80vh;"></canvas>
+
+        <!-- HTML Interactive Drag Overlay (Matches Canvas Coordinates Exactly) -->
+        <div id="dragOverlay" class="absolute inset-0 pointer-events-auto">
+          <!-- Dynamically populated with draggable text bounding boxes -->
+        </div>
+
+      </div>
+
+      <!-- Engine Status & Quality Info -->
+      <div class="mt-3 text-xs text-stone-400 text-center flex items-center justify-center gap-2">
+        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="qualityInfo">300 DPI Native High-Precision Engine — រក្សាគុណភាពដើម មិនបែករូប</span>
+      </div>
+
+    </main>
+
+  </div>
+
+  <script>
+    // Standard Print Dimensions at 300 DPI
+    const PAPER_SIZES = {
+      'a4': { width: 210, height: 297, pixelW: 2480, pixelH: 3508 },
+      'a3': { width: 297, height: 420, pixelW: 3508, pixelH: 4960 },
+      'a5': { width: 148, height: 210, pixelW: 1748, pixelH: 2480 },
+      'b5': { width: 176, height: 250, pixelW: 2078, pixelH: 2953 },
+      'letter': { width: 215.9, height: 279.4, pixelW: 2550, pixelH: 3300 }
+    };
+
+    // 5 Draggable & Customizable Cover Elements
+    let elements = {
+      school: {
+        id: 'school',
+        label: 'សាលា / ស្ថាប័ន',
+        icon: '🏫',
+        text: 'វិទ្យាល័យចំណេះទូទៅនិងបច្ចេកទេសព្រះរាជសម្ភារ',
+        xPercent: 50,
+        yPercent: 31,
+        size: 42,
+        font: "'Kantumruy Pro', sans-serif",
+        weight: 'bold',
+        style: 'normal',
+        color: '#1e3a8a', // Deep royal navy
+        align: 'center',
+        shadow: true,
+        shadowColor: 'rgba(255, 255, 255, 0.95)',
+        shadowBlur: 5,
+        visible: true
+      },
+      grade: {
+        id: 'grade',
+        label: 'ថ្នាក់រៀន',
+        icon: '🎓',
+        text: 'ថ្នាក់ទី ៩ " A "',
+        xPercent: 50,
+        yPercent: 40.5,
+        size: 38,
+        font: "'Kantumruy Pro', sans-serif",
+        weight: 'bold',
+        style: 'normal',
+        color: '#1e3a8a',
+        align: 'center',
+        shadow: true,
+        shadowColor: 'rgba(255, 255, 255, 0.95)',
+        shadowBlur: 5,
+        visible: true
+      },
+      subject: {
+        id: 'subject',
+        label: 'មុខវិជ្ជា',
+        icon: '📚',
+        text: 'ពីជគណិត',
+        xPercent: 50,
+        yPercent: 51,
+        size: 54,
+        font: "'Moul', serif", // Traditional Khmer Moul title font
+        weight: 'normal',
+        style: 'normal',
+        color: '#1e3a8a',
+        align: 'center',
+        shadow: true,
+        shadowColor: 'rgba(255, 255, 255, 0.95)',
+        shadowBlur: 6,
+        visible: true
+      },
+      student: {
+        id: 'student',
+        label: 'ឈ្មោះសិស្ស',
+        icon: '👤',
+        text: 'តាន់ លីតៃ',
+        xPercent: 50,
+        yPercent: 62.5,
+        size: 44,
+        font: "'Kantumruy Pro', sans-serif",
+        weight: 'bold',
+        style: 'normal',
+        color: '#1e3a8a',
+        align: 'center',
+        shadow: true,
+        shadowColor: 'rgba(255, 255, 255, 0.95)',
+        shadowBlur: 5,
+        visible: true
+      },
+      year: {
+        id: 'year',
+        label: 'ឆ្នាំសិក្សា',
+        icon: '📅',
+        text: 'ឆ្នាំសិក្សា ២០២៥-២០២៦',
+        xPercent: 50,
+        yPercent: 71.5,
+        size: 34,
+        font: "'Kantumruy Pro', sans-serif",
+        weight: 'bold',
+        style: 'normal',
+        color: '#334155',
+        align: 'center',
+        shadow: true,
+        shadowColor: 'rgba(255, 255, 255, 0.95)',
+        shadowBlur: 5,
+        visible: true
+      }
+    };
+
+    let selectedElementId = 'school';
+    let currentBgMode = 'floral_a4'; // Default to the pristine matching floral A4
+    let customUploadedImage = null;
+    let loadedPresetImages = {};
+    let showGuides = true;
+    let activeDrag = null;
+
+    // Canvas references
+    const canvas = document.getElementById('coverCanvas');
+    const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+    const dragOverlay = document.getElementById('dragOverlay');
+
+    // Source mapping for preset images (Base64 data or local path fallback)
+    function getPresetSource(key) {
+      if (window.BACKGROUND_PRESETS && window.BACKGROUND_PRESETS[key]) {
+        return window.BACKGROUND_PRESETS[key];
+      }
+      const fileMap = {
+        floral_a4: 'floral_cover_a4.jpg',
+        floral_original: 'flower_cover_bg.png',
+        floral_hd: 'floral_cover_hd.jpg'
+      };
+      return fileMap[key] || '';
+    }
+
+    // Initialize Preloaded Images
+    function preloadPresets() {
+      ['floral_a4', 'floral_original', 'floral_hd'].forEach(key => {
+        const src = getPresetSource(key);
+        if (src) {
+          const img = new Image();
+          img.src = src;
+          img.onload = () => {
+            loadedPresetImages[key] = img;
+            if (currentBgMode === key) {
+              redrawCanvasGraphics();
+            }
+          };
+        }
+      });
+    }
+
+    // Toggle Guides View Mode
+    function toggleGuides() {
+      showGuides = !showGuides;
+      const btnText = document.getElementById('guidesBtnText');
+      if (showGuides) {
+        dragOverlay.classList.remove('hide-guides');
+        btnText.textContent = "បន្ទាត់ទាញ: បើក";
+      } else {
+        dragOverlay.classList.add('hide-guides');
+        btnText.textContent = "បន្ទាត់ទាញ: បិទ";
+      }
+    }
+
+    // Adjust PDF Copies
+    function adjustQty(change) {
+      const el = document.getElementById('pdfQuantity');
+      let val = parseInt(el.value || 1, 10) + change;
+      if (val < 1) val = 1;
+      if (val > 100) val = 100;
+      el.value = val;
+    }
+
+    // Switch Sidebar Tab
+    function switchSidebarTab(tabName) {
+      ['texts', 'backgrounds', 'export'].forEach(t => {
+        const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        const content = document.getElementById(`tabContent${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (t === tabName) {
+          btn.className = "py-2 px-2 rounded-lg transition text-sky-400 bg-stone-800/90 shadow text-center flex items-center justify-center gap-1.5 font-bold";
+          content.classList.remove('hidden');
+        } else {
+          btn.className = "py-2 px-2 rounded-lg transition text-stone-400 hover:text-stone-200 text-center flex items-center justify-center gap-1.5";
+          content.classList.add('hidden');
+        }
+      });
+    }
+
+    // Select Element to edit in sidebar
+    function selectElement(id) {
+      selectedElementId = id;
+      const item = elements[id];
+      if (!item) return;
+
+      // Update chips
+      document.querySelectorAll('.item-chip').forEach(btn => {
+        btn.className = "item-chip py-2 px-1 rounded-lg text-center transition font-semibold flex flex-col items-center gap-0.5 text-stone-400 hover:text-stone-200";
+      });
+      const activeChip = document.getElementById(`chip-${id}`);
+      if (activeChip) {
+        activeChip.className = "item-chip py-2 px-1 rounded-lg text-center transition font-semibold flex flex-col items-center gap-0.5 bg-sky-500/20 text-sky-300 border border-sky-500/40";
+      }
+
+      // Populate card fields
+      document.getElementById('activeItemIcon').textContent = item.icon;
+      document.getElementById('activeItemLabel').textContent = item.label;
+      document.getElementById('activeTextValue').value = item.text;
+      
+      document.getElementById('sliderX').value = item.xPercent;
+      document.getElementById('sliderY').value = item.yPercent;
+      document.getElementById('labelX').textContent = item.xPercent + '%';
+      document.getElementById('labelY').textContent = item.yPercent + '%';
+      document.getElementById('activePositionLabel').textContent = `X: ${item.xPercent}% | Y: ${item.yPercent}%`;
+
+      document.getElementById('activeFontFamily').value = item.font;
+      document.getElementById('activeFontSize').value = item.size;
+      document.getElementById('activeSizeLabel').textContent = item.size + 'px';
+      document.getElementById('activeColorPicker').value = item.color.startsWith('#') ? item.color : '#1e3a8a';
+
+      // Update button states
+      updateAlignButtons(item.align);
+      updateWeightButton(item.weight);
+      updateShadowButton(item.shadow);
+      updateVisibilityButton(item.visible);
+
+      // Highlight in overlay
+      updateDragOverlaySelection();
+    }
+
+    function updateAlignButtons(align) {
+      ['left', 'center', 'right'].forEach(a => {
+        const btn = document.getElementById(`btnAlign${a.charAt(0).toUpperCase() + a.slice(1)}`);
+        if (a === align) {
+          btn.className = "flex-1 py-1 rounded text-center bg-sky-500/20 text-sky-300 font-bold";
+        } else {
+          btn.className = "flex-1 py-1 rounded text-center text-stone-400 hover:text-white";
+        }
+      });
+    }
+
+    function updateWeightButton(weight) {
+      const btn = document.getElementById('btnWeight');
+      if (weight === 'bold') {
+        btn.className = "flex-1 py-1 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/30 font-bold text-center";
+        btn.textContent = "B ក្រាស់";
+      } else {
+        btn.className = "flex-1 py-1 rounded-lg bg-stone-800 text-stone-300 border border-stone-700 text-center";
+        btn.textContent = "ធម្មតា";
+      }
+    }
+
+    function updateShadowButton(shadow) {
+      const btn = document.getElementById('btnShadow');
+      if (shadow) {
+        btn.className = "flex-1 py-1 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/30 font-semibold text-center";
+      } else {
+        btn.className = "flex-1 py-1 rounded-lg bg-stone-800 text-stone-300 border border-stone-700 text-center";
+      }
+    }
+
+    function updateVisibilityButton(visible) {
+      const btn = document.getElementById('btnActiveVisibility');
+      if (visible) {
+        btn.textContent = "👁️ បង្ហាញ";
+        btn.className = "px-2 py-0.5 text-[11px] font-semibold bg-stone-800 hover:bg-stone-700 text-stone-300 border border-stone-700 rounded-md transition";
+      } else {
+        btn.textContent = "🚫 លាក់";
+        btn.className = "px-2 py-0.5 text-[11px] font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/40 rounded-md transition";
+      }
+    }
+
+    // Update Property of active element
+    function updateActiveElementProperty(prop, value) {
+      const item = elements[selectedElementId];
+      if (!item) return;
+
+      item[prop] = value;
+
+      if (prop === 'xPercent') {
+        document.getElementById('labelX').textContent = value + '%';
+        document.getElementById('activePositionLabel').textContent = `X: ${value}% | Y: ${item.yPercent}%`;
+      } else if (prop === 'yPercent') {
+        document.getElementById('labelY').textContent = value + '%';
+        document.getElementById('activePositionLabel').textContent = `X: ${item.xPercent}% | Y: ${value}%`;
+      } else if (prop === 'size') {
+        document.getElementById('activeSizeLabel').textContent = value + 'px';
+      } else if (prop === 'align') {
+        updateAlignButtons(value);
+      } else if (prop === 'text') {
+        syncQuickInputs();
+      }
+
+      redrawCanvasGraphics();
+      updateDragOverlay();
+    }
+
+    function setElementColor(color) {
+      updateActiveElementProperty('color', color);
+      document.getElementById('activeColorPicker').value = color;
+    }
+
+    function toggleActiveElementWeight() {
+      const item = elements[selectedElementId];
+      const newWeight = item.weight === 'bold' ? 'normal' : 'bold';
+      updateActiveElementProperty('weight', newWeight);
+      updateWeightButton(newWeight);
+    }
+
+    function toggleActiveElementShadow() {
+      const item = elements[selectedElementId];
+      const newShadow = !item.shadow;
+      updateActiveElementProperty('shadow', newShadow);
+      updateShadowButton(newShadow);
+    }
+
+    function toggleActiveElementVisibility() {
+      const item = elements[selectedElementId];
+      item.visible = !item.visible;
+      updateVisibilityButton(item.visible);
+      redrawCanvasGraphics();
+      updateDragOverlay();
+    }
+
+    function centerActiveElementHorizontally() {
+      updateActiveElementProperty('xPercent', 50);
+      document.getElementById('sliderX').value = 50;
+    }
+
+    // Directional Nudge (Keyboard or Buttons)
+    function nudgeActiveElement(dx, dy) {
+      const item = elements[selectedElementId];
+      if (!item) return;
+
+      let newX = Math.round((item.xPercent + dx * 0.5) * 10) / 10;
+      let newY = Math.round((item.yPercent + dy * 0.5) * 10) / 10;
+      
+      newX = Math.max(5, Math.min(95, newX));
+      newY = Math.max(5, Math.min(95, newY));
+
+      item.xPercent = newX;
+      item.yPercent = newY;
+
+      document.getElementById('sliderX').value = newX;
+      document.getElementById('sliderY').value = newY;
+      document.getElementById('labelX').textContent = newX + '%';
+      document.getElementById('labelY').textContent = newY + '%';
+      document.getElementById('activePositionLabel').textContent = `X: ${newX}% | Y: ${newY}%`;
+
+      redrawCanvasGraphics();
+      updateDragOverlay();
+    }
+
+    // Sync Bulk Inputs
+    function syncQuickInputs() {
+      document.getElementById('quickSchool').value = elements.school.text;
+      document.getElementById('quickGrade').value = elements.grade.text;
+      document.getElementById('quickSubject').value = elements.subject.text;
+      document.getElementById('quickStudent').value = elements.student.text;
+      document.getElementById('quickYear').value = elements.year.text;
+    }
+
+    function syncTextFromQuick(id, val) {
+      if (elements[id]) {
+        elements[id].text = val;
+        if (selectedElementId === id) {
+          document.getElementById('activeTextValue').value = val;
+        }
+        redrawCanvasGraphics();
+        updateDragOverlay();
+      }
+    }
+
+    // Reset default positions
+    function resetDefaultPositions() {
+      elements.school.xPercent = 50; elements.school.yPercent = 31; elements.school.align = 'center';
+      elements.grade.xPercent = 50; elements.grade.yPercent = 40.5; elements.grade.align = 'center';
+      elements.subject.xPercent = 50; elements.subject.yPercent = 51; elements.subject.align = 'center';
+      elements.student.xPercent = 50; elements.student.yPercent = 62.5; elements.student.align = 'center';
+      elements.year.xPercent = 50; elements.year.yPercent = 71.5; elements.year.align = 'center';
+      
+      selectElement(selectedElementId);
+      redrawCanvasGraphics();
+      updateDragOverlay();
+    }
+
+    function applyPresetLayout(mode) {
+      if (mode === 'floral-centered') {
+        resetDefaultPositions();
+      } else if (mode === 'spacious') {
+        elements.school.xPercent = 50; elements.school.yPercent = 28;
+        elements.grade.xPercent = 50; elements.grade.yPercent = 38;
+        elements.subject.xPercent = 50; elements.subject.yPercent = 50;
+        elements.student.xPercent = 50; elements.student.yPercent = 64;
+        elements.year.xPercent = 50; elements.year.yPercent = 74;
+        selectElement(selectedElementId);
+        redrawCanvasGraphics();
+        updateDragOverlay();
+      }
+    }
+
+    // Set Background Preset
+    function setBackgroundMode(mode) {
+      currentBgMode = mode;
+      customUploadedImage = null;
+
+      // Update button borders
+      document.querySelectorAll('.bg-btn').forEach(btn => {
+        btn.classList.remove('border-2', 'border-sky-400', 'border-amber-400');
+        btn.classList.add('border', 'border-stone-700');
+      });
+      const activeBgBtn = document.getElementById(`bgBtn-${mode}`);
+      if (activeBgBtn) {
+        activeBgBtn.classList.remove('border-stone-700');
+        activeBgBtn.classList.add('border-2', mode.includes('royal') ? 'border-amber-400' : 'border-sky-400');
+      }
+
+      // Check if image is loaded, if not load it
+      if (['floral_a4', 'floral_original', 'floral_hd'].includes(mode) && !loadedPresetImages[mode]) {
+        const src = getPresetSource(mode);
+        if (src) {
+          const img = new Image();
+          img.src = src;
+          img.onload = () => {
+            loadedPresetImages[mode] = img;
+            renderCanvas();
+          };
+        }
+      }
+
+      // Smart color adjustment for contrasting readability
+      if (mode === 'dark-royal') {
+        Object.values(elements).forEach(el => {
+          el.color = '#ffd152'; // Gold for dark
+          el.shadowColor = 'rgba(0, 0, 0, 0.85)';
+        });
+      } else if (mode === 'white-royal') {
+        Object.values(elements).forEach(el => {
+          el.color = '#92400e'; // Bronze gold
+          el.shadowColor = 'rgba(255, 255, 255, 0.9)';
+        });
+      } else {
+        // Floral or Clean White -> Royal Navy & Charcoal
+        elements.school.color = '#1e3a8a';
+        elements.grade.color = '#1e3a8a';
+        elements.subject.color = '#1e3a8a';
+        elements.student.color = '#1e3a8a';
+        elements.year.color = '#334155';
+        Object.values(elements).forEach(el => {
+          el.shadowColor = 'rgba(255, 255, 255, 0.95)';
+        });
+      }
+
+      selectElement(selectedElementId);
+      renderCanvas();
+    }
+
+    // Custom Upload Handling
+    document.getElementById('bgImageUpload').addEventListener('change', function(e) {
+      if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const img = new Image();
+          img.onload = function() {
+            customUploadedImage = img;
+            currentBgMode = 'custom';
+            document.getElementById('qualityInfo').innerHTML = `រូបភាពផ្ទាល់កម្រិត៖ <b class="text-sky-400 font-mono">${img.naturalWidth} x ${img.naturalHeight}px</b> (Original Crisp Quality)`;
+            
+            document.querySelectorAll('.bg-btn').forEach(btn => {
+              btn.classList.remove('border-2', 'border-sky-400');
+              btn.classList.add('border', 'border-stone-700');
+            });
+
+            renderCanvas();
+          };
+          img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Helper: Draw image with aspect cover (Never distorted)
+    function drawImageCover(ctx, img, targetW, targetH) {
+      const imgW = img.naturalWidth || img.width;
+      const imgH = img.naturalHeight || img.height;
+
+      const targetRatio = targetW / targetH;
+      const imgRatio = imgW / imgH;
+
+      let srcX = 0, srcY = 0, srcW = imgW, srcH = imgH;
+
+      if (imgRatio > targetRatio) {
+        srcW = imgH * targetRatio;
+        srcX = (imgW - srcW) / 2;
+      } else {
+        srcH = imgW / targetRatio;
+        srcY = (imgH - srcH) / 2;
+      }
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, targetW, targetH);
+    }
+
+    // REDRAW CANVAS GRAPHICS ONLY (Fast 60fps for dragging without DOM churn)
+    function redrawCanvasGraphics() {
+      const canvasW = canvas.width;
+      const canvasH = canvas.height;
+
+      // 1. Draw Background
+      if (currentBgMode === 'custom' && customUploadedImage) {
+        drawImageCover(ctx, customUploadedImage, canvasW, canvasH);
+      } else if (currentBgMode === 'floral_a4' && loadedPresetImages.floral_a4) {
+        drawImageCover(ctx, loadedPresetImages.floral_a4, canvasW, canvasH);
+      } else if (currentBgMode === 'floral_original' && loadedPresetImages.floral_original) {
+        drawImageCover(ctx, loadedPresetImages.floral_original, canvasW, canvasH);
+      } else if (currentBgMode === 'floral_hd' && loadedPresetImages.floral_hd) {
+        drawImageCover(ctx, loadedPresetImages.floral_hd, canvasW, canvasH);
+      } else if (currentBgMode === 'white-royal') {
+        drawRoyalKhmerBackground(canvasW, canvasH, false);
+      } else if (currentBgMode === 'dark-royal') {
+        drawRoyalKhmerBackground(canvasW, canvasH, true);
+      } else if (currentBgMode === 'clean-white') {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvasW, canvasH);
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 4 * (canvasW / 2480);
+        ctx.strokeRect(canvasW * 0.05, canvasH * 0.05, canvasW * 0.9, canvasH * 0.9);
+      } else {
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(0, 0, canvasW, canvasH);
+      }
+
+      // 2. Draw Cover Texts
+      drawCoverTexts(canvasW, canvasH);
+    }
+
+    // MAIN RENDER CANVAS (Full resize + graphics + overlay sync)
+    function renderCanvas() {
+      const paperKey = document.getElementById('paperSize').value;
+      const paper = PAPER_SIZES[paperKey] || PAPER_SIZES['a4'];
+
+      let canvasW = paper.pixelW;
+      let canvasH = paper.pixelH;
+
+      if (currentBgMode === 'custom' && customUploadedImage) {
+        const nativeW = customUploadedImage.naturalWidth;
+        if (nativeW > 1800) {
+          canvasW = nativeW;
+          canvasH = Math.round(canvasW * (paper.height / paper.width));
+        }
+      }
+
+      if (canvas.width !== canvasW || canvas.height !== canvasH) {
+        canvas.width = canvasW;
+        canvas.height = canvasH;
+      }
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      redrawCanvasGraphics();
+
+      if (!activeDrag) {
+        updateDragOverlay();
+      }
+    }
+
+    // High Definition Text Engine
+    function drawCoverTexts(w, h) {
+      const baseScale = (w / 1200);
+      const globalScale = parseFloat(document.getElementById('globalScale').value) / 100;
+
+      Object.values(elements).forEach(item => {
+        if (!item.visible || !item.text) return;
+
+        const posX = (w * (item.xPercent / 100));
+        const posY = (h * (item.yPercent / 100));
+        const actualFontSize = item.size * baseScale * globalScale;
+
+        ctx.font = `${item.style === 'italic' ? 'italic ' : ''}${item.weight} ${actualFontSize}px ${item.font}`;
+        ctx.textAlign = item.align;
+        ctx.textBaseline = 'middle';
+
+        ctx.save();
+        if (item.shadow) {
+          ctx.shadowColor = item.shadowColor || 'rgba(255, 255, 255, 0.9)';
+          ctx.shadowBlur = (item.shadowBlur || 4) * baseScale;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 1.5 * baseScale;
+        }
+
+        ctx.fillStyle = item.color;
+        ctx.fillText(item.text, posX, posY);
+        ctx.restore();
+      });
+    }
+
+    // Royal Background Procedural Generator
+    function drawRoyalKhmerBackground(w, h, isDark) {
+      const bgGrad = ctx.createRadialGradient(w/2, h/2, w * 0.05, w/2, h/2, Math.max(w, h) * 0.75);
+      if (isDark) {
+        bgGrad.addColorStop(0, '#36060c');
+        bgGrad.addColorStop(0.5, '#1e0205');
+        bgGrad.addColorStop(1, '#0c0002');
+      } else {
+        bgGrad.addColorStop(0, '#ffffff');
+        bgGrad.addColorStop(0.45, '#faf6ef');
+        bgGrad.addColorStop(0.85, '#f4ece0');
+        bgGrad.addColorStop(1, '#ebe0d0');
+      }
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      drawSimpleGoldBorder(w, h, isDark);
+    }
+
+    function drawSimpleGoldBorder(w, h, isDark) {
+      ctx.save();
+      ctx.strokeStyle = isDark ? '#d4af37' : '#c59b27';
+      ctx.lineWidth = 3 * (w / 1200);
+      const m = w * 0.05;
+      ctx.strokeRect(m, m, w - m * 2, h - m * 2);
+      ctx.strokeStyle = isDark ? 'rgba(212, 175, 55, 0.4)' : 'rgba(197, 155, 39, 0.3)';
+      ctx.lineWidth = 1 * (w / 1200);
+      ctx.strokeRect(m + 12, m + 12, w - (m + 12) * 2, h - (m + 12) * 2);
+      ctx.restore();
+    }
+
+    // Update overlay CSS classes without destroying elements
+    function updateDragOverlaySelection() {
+      Object.keys(elements).forEach(id => {
+        const box = document.getElementById(`drag-box-${id}`);
+        if (!box) return;
+        if (id === selectedElementId) {
+          box.classList.add('is-selected', 'z-30');
+          box.classList.remove('z-20');
+        } else {
+          box.classList.remove('is-selected', 'z-30');
+          box.classList.add('z-20');
+        }
+      });
+    }
+
+    // Reconstruct full Drag Overlay DOM
+    function updateDragOverlay() {
+      if (activeDrag) return; // Do not rebuild while actively dragging
+
+      const rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+
+      const scaleRatio = rect.width / canvas.width;
+      const globalScale = parseFloat(document.getElementById('globalScale').value) / 100;
+      const baseScale = (canvas.width / 1200);
+
+      dragOverlay.innerHTML = '';
+
+      Object.values(elements).forEach(item => {
+        if (!item.visible) return;
+
+        const isSelected = item.id === selectedElementId;
+        const box = document.createElement('div');
+        box.id = `drag-box-${item.id}`;
+        box.className = `drag-box absolute cursor-grab active:cursor-grabbing transition-colors ${isSelected ? 'is-selected z-30' : 'z-20'}`;
+        
+        let transformStr = 'translate(-50%, -50%)';
+        if (item.align === 'left') transformStr = 'translate(0, -50%)';
+        if (item.align === 'right') transformStr = 'translate(-100%, -50%)';
+
+        box.style.left = `${item.xPercent}%`;
+        box.style.top = `${item.yPercent}%`;
+        box.style.transform = transformStr;
+
+        const renderedFontSize = Math.max(10, item.size * baseScale * globalScale * scaleRatio);
+
+        box.innerHTML = `
+          <div class="selection-outline relative border-2 border-dashed border-transparent hover:border-sky-400/60 rounded-lg px-2.5 py-1 transition-all">
+            <span style="font-family: ${item.font}; font-size: ${renderedFontSize}px; font-weight: ${item.weight}; font-style: ${item.style}; visibility: hidden; white-space: nowrap; line-height: 1.2;">
+              ${escapeHtml(item.text || ' ')}
+            </span>
+
+            <div class="drag-badge absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-sky-500 text-stone-950 font-bold text-[10px] rounded-md shadow flex items-center gap-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
+              <span>${item.icon} ${item.label}</span>
+              <span class="opacity-75 font-mono">(${item.xPercent}%, ${item.yPercent}%)</span>
+            </div>
+
+            <div class="drag-handle-corner hidden absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-sky-500 rounded-full shadow pointer-events-none"></div>
+            <div class="drag-handle-corner hidden absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-sky-500 rounded-full shadow pointer-events-none"></div>
+            <div class="drag-handle-corner hidden absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-sky-500 rounded-full shadow pointer-events-none"></div>
+            <div class="drag-handle-corner hidden absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-sky-500 rounded-full shadow pointer-events-none"></div>
+          </div>
+        `;
+
+        // Direct Drag Events
+        box.addEventListener('pointerdown', (e) => startDrag(e, item.id));
+
+        // Double click to focus sidebar input
+        box.addEventListener('dblclick', () => {
+          const inp = document.getElementById('activeTextValue');
+          if (inp) { inp.focus(); inp.select(); }
+        });
+
+        dragOverlay.appendChild(box);
+      });
+    }
+
+    function escapeHtml(text) {
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    // Drag Implementation
+    function startDrag(e, itemId) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      selectElement(itemId);
+
+      const overlayRect = dragOverlay.getBoundingClientRect();
+      const item = elements[itemId];
+
+      activeDrag = {
+        itemId: itemId,
+        startX: e.clientX,
+        startY: e.clientY,
+        startPercentX: item.xPercent,
+        startPercentY: item.yPercent,
+        overlayW: overlayRect.width,
+        overlayH: overlayRect.height,
+        boxEl: document.getElementById(`drag-box-${itemId}`)
+      };
+
+      try {
+        e.target.setPointerCapture(e.pointerId);
+      } catch (err) {}
+
+      window.addEventListener('pointermove', onDragMove, { passive: false });
+      window.addEventListener('pointerup', endDrag);
+      window.addEventListener('pointercancel', endDrag);
+    }
+
+    function onDragMove(e) {
+      if (!activeDrag) return;
+      e.preventDefault();
+
+      const item = elements[activeDrag.itemId];
+      if (!item) return;
+
+      const deltaX = e.clientX - activeDrag.startX;
+      const deltaY = e.clientY - activeDrag.startY;
+
+      const deltaPercentX = (deltaX / activeDrag.overlayW) * 100;
+      const deltaPercentY = (deltaY / activeDrag.overlayH) * 100;
+
+      let newX = Math.round((activeDrag.startPercentX + deltaPercentX) * 10) / 10;
+      let newY = Math.round((activeDrag.startPercentY + deltaPercentY) * 10) / 10;
+
+      newX = Math.max(5, Math.min(95, newX));
+      newY = Math.max(5, Math.min(95, newY));
+
+      item.xPercent = newX;
+      item.yPercent = newY;
+
+      // Update sidebar displays
+      document.getElementById('sliderX').value = newX;
+      document.getElementById('sliderY').value = newY;
+      document.getElementById('labelX').textContent = newX + '%';
+      document.getElementById('labelY').textContent = newY + '%';
+      document.getElementById('activePositionLabel').textContent = `X: ${newX}% | Y: ${newY}%`;
+
+      // Fast reposition of overlay element directly
+      if (activeDrag.boxEl) {
+        activeDrag.boxEl.style.left = `${newX}%`;
+        activeDrag.boxEl.style.top = `${newY}%`;
+        const badge = activeDrag.boxEl.querySelector('.drag-badge');
+        if (badge) {
+          badge.innerHTML = `<span>${item.icon} ${item.label}</span> <span class="opacity-75 font-mono">(${newX}%, ${newY}%)</span>`;
+        }
+      }
+
+      // Live redraw canvas graphics only
+      redrawCanvasGraphics();
+    }
+
+    function endDrag(e) {
+      if (!activeDrag) return;
+      activeDrag = null;
+      window.removeEventListener('pointermove', onDragMove);
+      window.removeEventListener('pointerup', endDrag);
+      window.removeEventListener('pointercancel', endDrag);
+      renderCanvas();
+    }
+
+    // Keyboard Arrow Nudging Support
+    window.addEventListener('keydown', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+      if (e.key === 'ArrowUp') { e.preventDefault(); nudgeActiveElement(0, e.shiftKey ? -2 : -0.5); }
+      if (e.key === 'ArrowDown') { e.preventDefault(); nudgeActiveElement(0, e.shiftKey ? 2 : 0.5); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); nudgeActiveElement(e.shiftKey ? -2 : -0.5, 0); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); nudgeActiveElement(e.shiftKey ? 2 : 0.5, 0); }
+    });
+
+    // Window Resize Observer to adjust overlay metrics
+    window.addEventListener('resize', () => {
+      updateDragOverlay();
+    });
+
+    // EXPORT 1: DOWNLOAD AS HIGH-RES IMAGE (PNG)
+    function downloadCoverImage() {
+      try {
+        renderCanvas();
+        const dataUrl = canvas.toDataURL('image/png', 1.0);
+        const studentName = elements.student.text.trim() || 'BookCover';
+        const link = document.createElement('a');
+        link.download = `គម្រប_${studentName.replace(/\s+/g, '_')}_HD.png`;
+        link.href = dataUrl;
+        link.click();
+      } catch (err) {
+        console.error("Image download error:", err);
+        alert("មិនអាចទាញយករូបភាពបានឡើយ៖ " + err.message);
+      }
+    }
+
+    // EXPORT 2: DOWNLOAD AS 300 DPI PDF
+    async function downloadCoverPDF() {
+      const btn = document.getElementById('btnSavePdf');
+      const btnText = document.getElementById('pdfBtnText');
+
+      try {
+        btn.disabled = true;
+        btnText.textContent = "កំពុងបង្កើត PDF (300 DPI)...";
+
+        // Render clean canvas
+        renderCanvas();
+
+        const { jsPDF } = window.jspdf;
+        const paperKey = document.getElementById('paperSize').value;
+        const paper = PAPER_SIZES[paperKey] || PAPER_SIZES['a4'];
+        const quantity = parseInt(document.getElementById('pdfQuantity').value, 10) || 1;
+
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: [paper.width, paper.height]
+        });
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+
+        for (let i = 0; i < quantity; i++) {
+          if (i > 0) {
+            pdf.addPage([paper.width, paper.height], 'portrait');
+          }
+          pdf.addImage(imgData, 'JPEG', 0, 0, paper.width, paper.height, '', 'FAST');
+        }
+
+        const studentName = elements.student.text.trim() || 'BookCover';
+        const fileName = `គម្រប_${studentName.replace(/\s+/g, '_')}_${paperKey.toUpperCase()}_300DPI.pdf`;
+
+        pdf.save(fileName);
+
+      } catch (err) {
+        console.error("PDF generation failed:", err);
+        alert("មានបញ្ហាក្នុងការទាញយក PDF សូមសាកល្បងម្ដងទៀត។");
+      } finally {
+        btn.disabled = false;
+        btnText.textContent = "ទាញយកជា PDF (300 DPI)";
+      }
+    }
+
+    // Initialize on Startup
+    window.addEventListener('load', () => {
+      preloadPresets();
+      syncQuickInputs();
+      selectElement('school');
+      
+      document.fonts.ready.then(() => {
+        renderCanvas();
+        updateDragOverlay();
+      });
+
+      setTimeout(() => {
+        renderCanvas();
+        updateDragOverlay();
+      }, 350);
+    });
+  </script>
+</body>
+</html>
