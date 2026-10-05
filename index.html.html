@@ -152,7 +152,7 @@
       <div class="grid grid-cols-3 gap-1.5 bg-stone-950 p-1 rounded-xl border border-stone-800 text-xs font-semibold">
         <button id="tabBtnTexts" onclick="switchSidebarTab('texts')" 
           class="py-2 px-2 rounded-lg transition text-sky-400 bg-stone-800/90 shadow text-center flex items-center justify-center gap-1.5">
-          <span>🎯 សារេ</span>
+          <span>🎯 ទាញសារេ</span>
         </button>
         <button id="tabBtnBackgrounds" onclick="switchSidebarTab('backgrounds')" 
           class="py-2 px-2 rounded-lg transition text-stone-400 hover:text-stone-200 text-center flex items-center justify-center gap-1.5">
@@ -160,7 +160,7 @@
         </button>
         <button id="tabBtnExport" onclick="switchSidebarTab('export')" 
           class="py-2 px-2 rounded-lg transition text-stone-400 hover:text-stone-200 text-center flex items-center justify-center gap-1.5">
-          <span>⚙️ កំណត់ទំហំក្រដាសនិងចំនួនដែលចង់បាន</span>
+          <span>⚙️ ក្រដាស & ពុម្ព</span>
         </button>
       </div>
 
@@ -297,6 +297,69 @@
               </div>
               <input type="range" id="activeFontSize" min="18" max="90" step="1" value="42"
                 oninput="updateActiveElementProperty('size', parseInt(this.value, 10))" class="w-full accent-sky-400 mt-2">
+            </div>
+          </div>
+
+          <!-- Curved Text (Arc) Controls (ពត់អក្សរឲ្យកោង) -->
+          <div class="space-y-2 bg-gradient-to-br from-stone-900/95 to-sky-950/30 p-2.5 rounded-xl border border-sky-500/30 shadow-inner">
+            <div class="flex items-center justify-between text-[11px]">
+              <div class="flex items-center gap-1.5 font-bold text-sky-200">
+                <span class="text-sm">🔄</span>
+                <span>ពត់អក្សរឲ្យកោង (Curved Text):</span>
+              </div>
+              <span id="activeCurveLabel" class="font-mono text-[11px] font-bold text-stone-400 px-2 py-0.5 rounded-full bg-stone-950 border border-stone-800">ត្រង់ (0%)</span>
+            </div>
+
+            <!-- Curvature Slider -->
+            <div>
+              <div class="flex justify-between text-[10px] text-stone-400 mb-1 font-medium">
+                <span class="flex items-center gap-0.5 text-amber-300"><span>⌣</span> <span>កោងចុះ</span></span>
+                <span class="text-stone-400">ត្រង់ (0)</span>
+                <span class="flex items-center gap-0.5 text-sky-300"><span>⌒</span> <span>កោងឡើងលើ</span></span>
+              </div>
+              <input type="range" id="activeCurve" min="-100" max="100" step="1" value="0"
+                oninput="updateActiveElementProperty('curve', parseInt(this.value, 10))" 
+                class="w-full accent-sky-400 cursor-pointer">
+            </div>
+
+            <!-- Quick Curve Preset Buttons -->
+            <div class="grid grid-cols-5 gap-1 pt-0.5 text-[10px] font-semibold">
+              <button type="button" onclick="setElementCurve(0)" id="curveBtn-0" 
+                class="curve-preset-btn py-1 px-1 rounded-lg bg-sky-500/30 text-sky-200 border border-sky-400 font-bold text-center transition active:scale-95 shadow-sm" 
+                title="ត្រង់ធម្មតា">
+                ─ ត្រង់
+              </button>
+              <button type="button" onclick="setElementCurve(25)" id="curveBtn-25" 
+                class="curve-preset-btn py-1 px-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-sky-300 border border-stone-700 text-center transition active:scale-95 shadow-sm" 
+                title="កោងឡើងលើតិច">
+                ⌒ តិច
+              </button>
+              <button type="button" onclick="setElementCurve(45)" id="curveBtn-45" 
+                class="curve-preset-btn py-1 px-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-sky-300 border border-stone-700 text-center transition active:scale-95 shadow-sm" 
+                title="កោងឡើងលើល្មម (ស្តង់ដារ)">
+                ⌒ ល្មម
+              </button>
+              <button type="button" onclick="setElementCurve(70)" id="curveBtn-70" 
+                class="curve-preset-btn py-1 px-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-sky-300 border border-stone-700 text-center transition active:scale-95 shadow-sm" 
+                title="កោងឡើងលើខ្លាំង">
+                ⌒ ខ្លាំង
+              </button>
+              <button type="button" onclick="setElementCurve(-35)" id="curveBtn-m35" 
+                class="curve-preset-btn py-1 px-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-amber-300 border border-stone-700 text-center transition active:scale-95 shadow-sm" 
+                title="កោងចុះក្រោម">
+                ⌣ ចុះ
+              </button>
+            </div>
+
+            <!-- Letter Spacing Adjustment -->
+            <div class="pt-1.5 border-t border-stone-800/80">
+              <div class="flex justify-between text-[11px] text-stone-400 mb-1">
+                <span>គម្លាតចន្លោះអក្សរ (Letter Spacing):</span>
+                <span id="activeSpacingLabel" class="font-mono text-sky-400 font-bold">0px</span>
+              </div>
+              <input type="range" id="activeLetterSpacing" min="-2" max="25" step="1" value="0"
+                oninput="updateActiveElementProperty('letterSpacing', parseInt(this.value, 10))" 
+                class="w-full accent-sky-400 cursor-pointer">
             </div>
           </div>
 
@@ -496,7 +559,13 @@
           <label class="block text-xs font-semibold text-stone-300">ម៉ូដទីតាំងរៀបរយជាមុន (Layout Presets):</label>
           <div class="grid grid-cols-2 gap-2 text-xs">
             <button type="button" onclick="applyPresetLayout('floral-centered')" class="p-2 rounded-lg bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 text-left font-medium">
-              🌸 ម៉ូដផ្កាខៀវ (សមស្រប)
+              🌸 ម៉ូដផ្កាខៀវ (ធម្មតា)
+            </button>
+            <button type="button" onclick="applyPresetLayout('curved-school')" class="p-2 rounded-lg bg-stone-800 hover:bg-stone-700 border border-sky-500/40 text-sky-300 text-left font-medium shadow-sm">
+              🏛️ ម៉ូដកោងសាលា ⌒
+            </button>
+            <button type="button" onclick="applyPresetLayout('curved-double')" class="p-2 rounded-lg bg-stone-800 hover:bg-stone-700 border border-sky-500/40 text-sky-300 text-left font-medium shadow-sm">
+              ✨ កោងលើ & ក្រោម ⌒⌣
             </button>
             <button type="button" onclick="applyPresetLayout('spacious')" class="p-2 rounded-lg bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 text-left font-medium">
               📐 រៀបគម្លាតទូលាយ
@@ -571,6 +640,8 @@
         shadow: true,
         shadowColor: 'rgba(255, 255, 255, 0.95)',
         shadowBlur: 5,
+        curve: 0, // -100 to +100 (0 = Flat, >0 = Arch Up ⌒, <0 = Arch Down ⌣)
+        letterSpacing: 0,
         visible: true
       },
       grade: {
@@ -589,6 +660,8 @@
         shadow: true,
         shadowColor: 'rgba(255, 255, 255, 0.95)',
         shadowBlur: 5,
+        curve: 0,
+        letterSpacing: 0,
         visible: true
       },
       subject: {
@@ -607,6 +680,8 @@
         shadow: true,
         shadowColor: 'rgba(255, 255, 255, 0.95)',
         shadowBlur: 6,
+        curve: 0,
+        letterSpacing: 0,
         visible: true
       },
       student: {
@@ -625,6 +700,8 @@
         shadow: true,
         shadowColor: 'rgba(255, 255, 255, 0.95)',
         shadowBlur: 5,
+        curve: 0,
+        letterSpacing: 0,
         visible: true
       },
       year: {
@@ -643,6 +720,8 @@
         shadow: true,
         shadowColor: 'rgba(255, 255, 255, 0.95)',
         shadowBlur: 5,
+        curve: 0,
+        letterSpacing: 0,
         visible: true
       }
     };
@@ -757,6 +836,15 @@
       document.getElementById('activeSizeLabel').textContent = item.size + 'px';
       document.getElementById('activeColorPicker').value = item.color.startsWith('#') ? item.color : '#1e3a8a';
 
+      // Populate curve and letter spacing
+      const curveVal = typeof item.curve === 'number' ? item.curve : 0;
+      const spacingVal = typeof item.letterSpacing === 'number' ? item.letterSpacing : 0;
+      document.getElementById('activeCurve').value = curveVal;
+      updateCurveLabel(curveVal);
+      updateCurveButtons(curveVal);
+      document.getElementById('activeLetterSpacing').value = spacingVal;
+      document.getElementById('activeSpacingLabel').textContent = spacingVal + 'px';
+
       // Update button states
       updateAlignButtons(item.align);
       updateWeightButton(item.weight);
@@ -765,6 +853,41 @@
 
       // Highlight in overlay
       updateDragOverlaySelection();
+    }
+
+    function updateCurveLabel(val) {
+      const lbl = document.getElementById('activeCurveLabel');
+      if (!lbl) return;
+      if (val === 0) {
+        lbl.textContent = 'ត្រង់ (0%)';
+        lbl.className = 'font-mono text-[11px] font-bold text-stone-400 px-2 py-0.5 rounded-full bg-stone-950 border border-stone-800';
+      } else if (val > 0) {
+        lbl.textContent = `⌒ កោងឡើង +${val}%`;
+        lbl.className = 'font-mono text-[11px] font-bold text-sky-300 px-2 py-0.5 rounded-full bg-sky-950/80 border border-sky-500/40';
+      } else {
+        lbl.textContent = `⌣ កោងចុះ ${val}%`;
+        lbl.className = 'font-mono text-[11px] font-bold text-amber-300 px-2 py-0.5 rounded-full bg-amber-950/80 border border-amber-500/40';
+      }
+    }
+
+    function updateCurveButtons(val) {
+      const map = { 0: '0', 25: '25', 45: '45', 70: '70', '-35': 'm35' };
+      Object.keys(map).forEach(k => {
+        const btn = document.getElementById(`curveBtn-${map[k]}`);
+        if (btn) {
+          if (parseInt(k, 10) === val) {
+            btn.className = "curve-preset-btn py-1 px-1 rounded-lg bg-sky-500/30 text-sky-200 border border-sky-400 font-bold text-center transition active:scale-95 shadow-sm";
+          } else {
+            btn.className = "curve-preset-btn py-1 px-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 border border-stone-700 text-center transition active:scale-95 shadow-sm";
+          }
+        }
+      });
+    }
+
+    function setElementCurve(val) {
+      document.getElementById('activeCurve').value = val;
+      updateActiveElementProperty('curve', val);
+      updateCurveButtons(val);
     }
 
     function updateAlignButtons(align) {
@@ -826,6 +949,11 @@
         document.getElementById('activeSizeLabel').textContent = value + 'px';
       } else if (prop === 'align') {
         updateAlignButtons(value);
+      } else if (prop === 'curve') {
+        updateCurveLabel(value);
+        updateCurveButtons(value);
+      } else if (prop === 'letterSpacing') {
+        document.getElementById('activeSpacingLabel').textContent = value + 'px';
       } else if (prop === 'text') {
         syncQuickInputs();
       }
@@ -912,11 +1040,11 @@
 
     // Reset default positions
     function resetDefaultPositions() {
-      elements.school.xPercent = 50; elements.school.yPercent = 31; elements.school.align = 'center';
-      elements.grade.xPercent = 50; elements.grade.yPercent = 40.5; elements.grade.align = 'center';
-      elements.subject.xPercent = 50; elements.subject.yPercent = 51; elements.subject.align = 'center';
-      elements.student.xPercent = 50; elements.student.yPercent = 62.5; elements.student.align = 'center';
-      elements.year.xPercent = 50; elements.year.yPercent = 71.5; elements.year.align = 'center';
+      elements.school.xPercent = 50; elements.school.yPercent = 31; elements.school.align = 'center'; elements.school.curve = 0; elements.school.letterSpacing = 0;
+      elements.grade.xPercent = 50; elements.grade.yPercent = 40.5; elements.grade.align = 'center'; elements.grade.curve = 0; elements.grade.letterSpacing = 0;
+      elements.subject.xPercent = 50; elements.subject.yPercent = 51; elements.subject.align = 'center'; elements.subject.curve = 0; elements.subject.letterSpacing = 0;
+      elements.student.xPercent = 50; elements.student.yPercent = 62.5; elements.student.align = 'center'; elements.student.curve = 0; elements.student.letterSpacing = 0;
+      elements.year.xPercent = 50; elements.year.yPercent = 71.5; elements.year.align = 'center'; elements.year.curve = 0; elements.year.letterSpacing = 0;
       
       selectElement(selectedElementId);
       redrawCanvasGraphics();
@@ -926,12 +1054,31 @@
     function applyPresetLayout(mode) {
       if (mode === 'floral-centered') {
         resetDefaultPositions();
+      } else if (mode === 'curved-school') {
+        resetDefaultPositions();
+        elements.school.curve = 42;
+        elements.school.letterSpacing = 1;
+        elements.school.yPercent = 29.5;
+        selectElement('school');
+        redrawCanvasGraphics();
+        updateDragOverlay();
+      } else if (mode === 'curved-double') {
+        resetDefaultPositions();
+        elements.school.curve = 45;
+        elements.school.letterSpacing = 1;
+        elements.school.yPercent = 29;
+        elements.year.curve = -30;
+        elements.year.letterSpacing = 1;
+        elements.year.yPercent = 72;
+        selectElement('school');
+        redrawCanvasGraphics();
+        updateDragOverlay();
       } else if (mode === 'spacious') {
-        elements.school.xPercent = 50; elements.school.yPercent = 28;
-        elements.grade.xPercent = 50; elements.grade.yPercent = 38;
-        elements.subject.xPercent = 50; elements.subject.yPercent = 50;
-        elements.student.xPercent = 50; elements.student.yPercent = 64;
-        elements.year.xPercent = 50; elements.year.yPercent = 74;
+        elements.school.xPercent = 50; elements.school.yPercent = 28; elements.school.curve = 0;
+        elements.grade.xPercent = 50; elements.grade.yPercent = 38; elements.grade.curve = 0;
+        elements.subject.xPercent = 50; elements.subject.yPercent = 50; elements.subject.curve = 0;
+        elements.student.xPercent = 50; elements.student.yPercent = 64; elements.student.curve = 0;
+        elements.year.xPercent = 50; elements.year.yPercent = 74; elements.year.curve = 0;
         selectElement(selectedElementId);
         redrawCanvasGraphics();
         updateDragOverlay();
@@ -1106,7 +1253,18 @@
       }
     }
 
-    // High Definition Text Engine
+    // Intelligent Grapheme Cluster Splitter for Khmer Script & Multilingual Text
+    function splitKhmerGraphemes(text) {
+      if (!text) return [];
+      if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+        const segmenter = new Intl.Segmenter('km', { granularity: 'grapheme' });
+        return Array.from(segmenter.segment(text), s => s.segment);
+      }
+      const khmerClusterRegex = /(?:[\u1780-\u17D3][\u17D2][\u1780-\u17D3]|[\u1780-\u17D3][\u17B6-\u17D3\u17DD]*|[\s\S])/gu;
+      return text.match(khmerClusterRegex) || Array.from(text);
+    }
+
+    // High Definition Text Engine (Supports Flat & Curved Arc Typography)
     function drawCoverTexts(w, h) {
       const baseScale = (w / 1200);
       const globalScale = parseFloat(document.getElementById('globalScale').value) / 100;
@@ -1119,20 +1277,86 @@
         const actualFontSize = item.size * baseScale * globalScale;
 
         ctx.font = `${item.style === 'italic' ? 'italic ' : ''}${item.weight} ${actualFontSize}px ${item.font}`;
-        ctx.textAlign = item.align;
-        ctx.textBaseline = 'middle';
 
-        ctx.save();
-        if (item.shadow) {
-          ctx.shadowColor = item.shadowColor || 'rgba(255, 255, 255, 0.9)';
-          ctx.shadowBlur = (item.shadowBlur || 4) * baseScale;
-          ctx.shadowOffsetX = 0;
-          ctx.shadowOffsetY = 1.5 * baseScale;
+        const curveVal = typeof item.curve === 'number' ? item.curve : 0;
+
+        // 1. STRAIGHT / FLAT TEXT (Classic High-Speed Render)
+        if (curveVal === 0) {
+          ctx.textAlign = item.align;
+          ctx.textBaseline = 'middle';
+
+          ctx.save();
+          if (item.shadow) {
+            ctx.shadowColor = item.shadowColor || 'rgba(255, 255, 255, 0.9)';
+            ctx.shadowBlur = (item.shadowBlur || 4) * baseScale;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 1.5 * baseScale;
+          }
+
+          ctx.fillStyle = item.color;
+          ctx.fillText(item.text, posX, posY);
+          ctx.restore();
+          return;
         }
 
-        ctx.fillStyle = item.color;
-        ctx.fillText(item.text, posX, posY);
-        ctx.restore();
+        // 2. CURVED / ARCHED TEXT (ពត់អក្សរឲ្យកោង - Khmer Grapheme Safe)
+        const clusters = splitKhmerGraphemes(item.text);
+        if (!clusters.length) return;
+
+        const extraSpacing = (item.letterSpacing || 0) * baseScale * globalScale;
+        const clusterWidths = clusters.map(c => ctx.measureText(c).width);
+        const totalTextWidth = clusterWidths.reduce((sum, cw) => sum + cw, 0) + (clusters.length - 1) * extraSpacing;
+        if (totalTextWidth <= 0) return;
+
+        // Up to 150 degrees arc span for graceful curved titles
+        const maxTheta = 150 * (Math.PI / 180);
+        const theta = Math.max(0.08, (Math.abs(curveVal) / 100) * maxTheta);
+        const R = Math.max(10, totalTextWidth / theta);
+
+        // Alignment origin compensation
+        let originX = posX;
+        if (item.align === 'left') {
+          originX = posX + R * Math.sin(theta / 2);
+        } else if (item.align === 'right') {
+          originX = posX - R * Math.sin(theta / 2);
+        }
+
+        const isArchUp = curveVal > 0;
+        const shadowY = 1.5 * baseScale;
+
+        let currentDist = 0;
+        clusters.forEach((cluster, i) => {
+          const cW = clusterWidths[i];
+          const midDist = currentDist + cW / 2;
+          currentDist += cW + extraSpacing;
+
+          const t = (midDist / totalTextWidth) - 0.5; // -0.5 (left) to +0.5 (right)
+          const angle = t * theta;
+          const sinA = Math.sin(angle);
+          const cosA = Math.cos(angle);
+
+          const cx = originX + R * sinA;
+          const cy = isArchUp ? (posY + R * (1 - cosA)) : (posY - R * (1 - cosA));
+          const rot = isArchUp ? angle : -angle;
+
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(rot);
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+
+          if (item.shadow) {
+            ctx.shadowColor = item.shadowColor || 'rgba(255, 255, 255, 0.9)';
+            ctx.shadowBlur = (item.shadowBlur || 4) * baseScale;
+            // Align shadow straight downward regardless of character tilt
+            ctx.shadowOffsetX = Math.sin(-rot) * shadowY;
+            ctx.shadowOffsetY = Math.cos(-rot) * shadowY;
+          }
+
+          ctx.fillStyle = item.color;
+          ctx.fillText(cluster, 0, 0);
+          ctx.restore();
+        });
       });
     }
 
@@ -1203,9 +1427,18 @@
         box.id = `drag-box-${item.id}`;
         box.className = `drag-box absolute cursor-grab active:cursor-grabbing transition-colors ${isSelected ? 'is-selected z-30' : 'z-20'}`;
         
+        const isCurved = item.curve && item.curve !== 0;
         let transformStr = 'translate(-50%, -50%)';
         if (item.align === 'left') transformStr = 'translate(0, -50%)';
         if (item.align === 'right') transformStr = 'translate(-100%, -50%)';
+
+        if (isCurved) {
+          if (item.curve > 0) {
+            transformStr = 'translate(-50%, -15%)';
+          } else {
+            transformStr = 'translate(-50%, -85%)';
+          }
+        }
 
         box.style.left = `${item.xPercent}%`;
         box.style.top = `${item.yPercent}%`;
@@ -1213,14 +1446,21 @@
 
         const renderedFontSize = Math.max(10, item.size * baseScale * globalScale * scaleRatio);
 
+        const curveBadge = isCurved ? `
+          <span class="px-1.5 py-0.2 rounded ${item.curve > 0 ? 'bg-sky-400 text-stone-950' : 'bg-amber-400 text-stone-950'} font-bold text-[9px] shadow-sm">
+            ${item.curve > 0 ? '⌒ +' : '⌣ '}${item.curve}%
+          </span>
+        ` : '';
+
         box.innerHTML = `
-          <div class="selection-outline relative border-2 border-dashed border-transparent hover:border-sky-400/60 rounded-lg px-2.5 py-1 transition-all">
+          <div class="selection-outline relative border-2 border-dashed border-transparent hover:border-sky-400/60 rounded-lg px-2.5 ${isCurved ? 'py-3' : 'py-1'} transition-all">
             <span style="font-family: ${item.font}; font-size: ${renderedFontSize}px; font-weight: ${item.weight}; font-style: ${item.style}; visibility: hidden; white-space: nowrap; line-height: 1.2;">
               ${escapeHtml(item.text || ' ')}
             </span>
 
-            <div class="drag-badge absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-sky-500 text-stone-950 font-bold text-[10px] rounded-md shadow flex items-center gap-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
+            <div class="drag-badge absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-sky-500 text-stone-950 font-bold text-[10px] rounded-md shadow flex items-center gap-1.5 whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
               <span>${item.icon} ${item.label}</span>
+              ${curveBadge}
               <span class="opacity-75 font-mono">(${item.xPercent}%, ${item.yPercent}%)</span>
             </div>
 
@@ -1314,7 +1554,13 @@
         activeDrag.boxEl.style.top = `${newY}%`;
         const badge = activeDrag.boxEl.querySelector('.drag-badge');
         if (badge) {
-          badge.innerHTML = `<span>${item.icon} ${item.label}</span> <span class="opacity-75 font-mono">(${newX}%, ${newY}%)</span>`;
+          const isCurved = item.curve && item.curve !== 0;
+          const curveBadge = isCurved ? `
+            <span class="px-1.5 py-0.2 rounded ${item.curve > 0 ? 'bg-sky-400 text-stone-950' : 'bg-amber-400 text-stone-950'} font-bold text-[9px] shadow-sm">
+              ${item.curve > 0 ? '⌒ +' : '⌣ '}${item.curve}%
+            </span>
+          ` : '';
+          badge.innerHTML = `<span>${item.icon} ${item.label}</span> ${curveBadge} <span class="opacity-75 font-mono">(${newX}%, ${newY}%)</span>`;
         }
       }
 
